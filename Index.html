@@ -1,1 +1,672 @@
 
+<!DOCTYPE html><html lang="af">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Study Tracker</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0b1220;
+      color: #fff;
+    }
+    header {
+      padding: 16px;
+      text-align: center;
+      background: #121c31;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    h1 { margin: 0; font-size: 22px; }
+    .sub { color: #9fb2d9; font-size: 13px; margin-top: 6px; }
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      padding: 10px;
+      background: #10192c;
+      position: sticky;
+      top: 72px;
+      z-index: 9;
+    }
+    .tab {
+      background: #18243d;
+      border: none;
+      color: #fff;
+      padding: 10px 6px;
+      border-radius: 12px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .tab.active { background: #2f7fff; }
+    .page { display: none; padding: 14px; }
+    .page.active { display: block; }
+    .card {
+      background: #121c31;
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    h2, h3 { margin-top: 0; }
+    input, textarea, select {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: #0d1527;
+      color: #fff;
+      margin: 6px 0 10px;
+    }
+    textarea { min-height: 100px; resize: vertical; }
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 14px;
+      background: #2f7fff;
+      color: #fff;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button.secondary { background: #243350; }
+    .row { display: grid; gap: 10px; }
+    .row.two { grid-template-columns: 1fr 1fr; }
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #1d2c47;
+      color: #b8ccf2;
+      font-size: 12px;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+    .list-item {
+      background: #0d1527;
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .small { font-size: 12px; color: #9fb2d9; }
+    .big-number {
+      font-size: 34px;
+      font-weight: bold;
+      text-align: center;
+      margin: 12px 0;
+    }
+    .flashcard {
+      background: linear-gradient(145deg, #18243d, #0f1728);
+      border-radius: 18px;
+      min-height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .muted { color: #7f93ba; }
+    .danger { background: #b33939; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📚 Study Tracker</h1>
+    <div class="sub">Jou eie studie app soos jou fishing app</div>
+  </header>  <div class="tabs">
+    <button class="tab active" onclick="showPage('home', this)">Home</button>
+    <button class="tab" onclick="showPage('subjects', this)">Vakke</button>
+    <button class="tab" onclick="showPage('timer', this)">Timer</button>
+    <button class="tab" onclick="showPage('flashcards', this)">Kaartjies</button>
+    <button class="tab" onclick="showPage('notes', this)">Notas</button>
+  </div>  <section id="home" class="page active">
+    <div class="card">
+      <h2>Vandag se oorsig</h2>
+      <div id="stats"></div>
+    </div><div class="card">
+  <h3>Vinnige vak byvoeg</h3>
+  <input id="subjectName" placeholder="Bv. Wiskunde" />
+  <select id="subjectPriority">
+    <option value="Hoog">Prioriteit: Hoog</option>
+    <option value="Medium">Prioriteit: Medium</option>
+    <option value="Laag">Prioriteit: Laag</option>
+  </select>
+  <button onclick="addSubject()">+ Voeg vak by</button>
+</div>
+
+<div class="card">
+  <h3>Volgende fokus</h3>
+  <div id="nextStudy"></div>
+</div>
+
+  </section>  <section id="subjects" class="page">
+    <div class="card">
+      <h2>My vakke</h2>
+      <div id="subjectList"></div>
+    </div>
+  </section>  <section id="timer" class="page">
+    <div class="card">
+      <h2>Study Timer</h2>
+      <label>Kies vak</label>
+      <select id="timerSubject"></select>
+      <label>Minute</label>
+      <input id="timerMinutes" type="number" value="25" min="1" />
+      <div class="big-number" id="timerDisplay">25:00</div>
+      <div class="row two">
+        <button onclick="startTimer()">▶ Start</button>
+        <button class="secondary" onclick="resetTimer()">↺ Reset</button>
+      </div>
+    </div><div class="card">
+  <h3>Stydie sessies</h3>
+  <div id="sessionList"></div>
+</div>
+
+  </section>  <section id="flashcards" class="page">
+    <div class="card">
+      <h2>Flashcards</h2>
+      <select id="cardSubject"></select>
+      <input id="cardQuestion" placeholder="Vraag" />
+      <textarea id="cardAnswer" placeholder="Antwoord"></textarea>
+      <button onclick="addFlashcard()">+ Save kaartjie</button>
+    </div><div class="card">
+  <h3>Oefen</h3>
+  <select id="practiceSubject" onchange="loadPracticeCards()"></select>
+  <div class="flashcard" id="flashcardBox" onclick="flipCard()">Tik om kaartjie te wys</div>
+  <div style="margin-top:10px" class="row two">
+    <button class="secondary" onclick="prevCard()">◀ Vorige</button>
+    <button onclick="nextCard()">Volgende ▶</button>
+  </div>
+</div>
+
+  </section>  <section id="notes" class="page">
+    <div class="card">
+      <h2>Notas</h2>
+      <select id="noteSubject"></select>
+      <input id="noteTitle" placeholder="Titel van nota" />
+      <textarea id="noteBody" placeholder="Skryf jou notas hier..."></textarea>
+      <button onclick="saveNote()">💾 Save nota</button>
+    </div><div class="card">
+  <h3>Gestoor notas</h3>
+  <div id="noteList"></div>
+</div>
+
+  </section>  <script>
+    let subjects = JSON.parse(localStorage.getItem('study_subjects') || '[]');
+    let sessions = JSON.parse(localStorage.getItem('study_sessions') || '[]');
+    let flashcards = JSON.parse(localStorage.getItem('study_flashcards') || '[]');
+    let notes = JSON.parse(localStorage.getItem('study_notes') || '[]');
+
+    let timerInterval = null;
+    let remainingSeconds = 1500;
+    let practiceCards = [];
+    let currentCardIndex = 0;
+    let showingAnswer = false;
+
+    function saveAll() {
+      localStorage.setItem('study_subjects', JSON.stringify(subjects));
+      localStorage.setItem('study_sessions', JSON.stringify(sessions));
+      localStorage.setItem('study_flashcards', JSON.stringify(flashcards));
+      localStorage.setItem('study_notes', JSON.stringify(notes));
+    }
+
+    function showPage(pageId, btn) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    function addSubject() {
+      const name = document.getElementById('subjectName').value.trim();
+      const priority = document.getElementById('subjectPriority').value;
+      if (!name) return alert('Tik eers vak naam in');
+      subjects.push({ id: Date.now(), name, priority, created: new Date().toLocaleString() });
+      document.getElementById('subjectName').value = '';
+      saveAll();
+      renderAll();
+    }
+
+    function deleteSubject(id) {
+      subjects = subjects.filter(s => s.id !== id);
+      flashcards = flashcards.filter(c => c.subjectId !== id);
+      notes = notes.filter(n => n.subjectId !== id);
+      saveAll();
+      renderAll();
+    }
+
+    function renderSubjects() {
+      const list = document.getElementById('subjectList');
+      if (!subjects.length) {
+        list.innerHTML = '<div class="muted">Nog geen vakke nie.</div>';
+      } else {
+        list.innerHTML = subjects.map(s => `
+          <div class="list-item">
+            <strong>${s.name}</strong><br>
+            <span class="pill">${s.priority}</span>
+            <span class="small">Bygevoeg: ${s.created}</span>
+            <div style="margin-top:10px">
+              <button class="danger" onclick="deleteSubject(${s.id})">Delete</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      const options = subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+      ['timerSubject','cardSubject','practiceSubject','noteSubject'].forEach(id => {
+        document.getElementById(id).innerHTML = options || '<option value="">Geen vakke</option>';
+      });
+    }
+
+    function renderStats() {
+      const totalMinutes = sessions.reduce((sum, s) => sum + s.minutes, 0);
+      const totalCards = flashcards.length;
+      const totalNotes = notes.length;
+      document.getElementById('stats').innerHTML = `
+        <span class="pill">Vakke: ${subjects.length}</span>
+        <span class="pill">Studie minute: ${totalMinutes}</span>
+        <span class="pill">Flashcards: ${totalCards}</span>
+        <span class="pill">Notas: ${totalNotes}</span>
+      `;
+
+      const next = [...subjects].sort((a,b) => {
+        const score = { 'Hoog': 3, 'Medium': 2, 'Laag': 1 };
+        return score[b.priority] - score[a.priority];
+      })[0];
+      document.getElementById('nextStudy').innerHTML = next
+        ? `<div class="list-item"><strong>${next.name}</strong><br><span class="small">Begin hier – prioriteit ${next.priority}</span></div>`
+        : '<div class="muted">Voeg eers ’n vak by.</div>';
+    }
+
+    function startTimer() {
+      const minutes = parseInt(document.getElementById('timerMinutes').value || '25', 10);
+      const subjectId = document.getElementById('timerSubject').value;
+      if (!subjectId) return alert('Voeg eers ’n vak by');
+      if (timerInterval) clearInterval(timerInterval);
+      remainingSeconds = minutes * 60;
+      updateTimerDisplay();
+      timerInterval = setInterval(() => {
+        remainingSeconds--;
+        updateTimerDisplay();
+        if (remainingSeconds <= 0) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+          const subject = subjects.find(s => String(s.id) === String(subjectId));
+          sessions.unshift({
+            id: Date.now(),
+            subjectId: Number(subjectId),
+            subjectName: subject ? subject.name : 'Onbekend',
+            minutes,
+            finished: new Date().toLocaleString()
+          });
+          saveAll();
+          renderSessions();
+          renderStats();
+          alert('Sessie klaar ✅');
+        }
+      }, 1000);
+    }
+
+    function resetTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = null;
+      remainingSeconds = (parseInt(document.getElementById('timerMinutes').value || '25', 10) * 60);
+      updateTimerDisplay();
+    }
+
+    function updateTimerDisplay() {
+      const m = Math.floor(remainingSeconds / 60).toString().padStart(2, '0');
+      const s = (remainingSeconds % 60).toString().padStart(2, '0');
+      document.getElementById('timerDisplay').textContent = `${m}:${s}`;
+    }
+
+    function renderSessions() {
+      const list = document.getElementById('sessionList');
+      if (!sessions.length) {
+        list.innerHTML = '<div class="muted">Nog geen sessies voltooi nie.</div>';
+        return;
+      }
+      list.innerHTML = sessions.map(s => `
+        <div class="list-item">
+          <strong>${s.subjectName}</strong><br>
+          <span class="pill">${s.minutes} min</span>
+          <span class="small">${s.finished}</span>
+        </div>
+      `).join('');
+    }
+
+    function addFlashcard() {
+      const subjectId = Number(document.getElementById('cardSubject').value);
+      const question = document.getElementById('cardQuestion').value.trim();
+      const answer = document.getElementById('cardAnswer').value.trim();
+      if (!subjectId || !question || !answer) return alert('Voltooi al die velde');
+      flashcards.push({ id: Date.now(), subjectId, question, answer });
+      document.getElementById('cardQuestion').value = '';
+      document.getElementById('cardAnswer').value = '';
+      saveAll();
+      loadPracticeCards();
+      renderStats();
+    }
+
+    function loadPracticeCards() {
+      const subjectId = Number(document.getElementById('practiceSubject').value);
+      practiceCards = flashcards.filter(c => c.subjectId === subjectId);
+      currentCardIndex = 0;
+      showingAnswer = false;
+      drawCard();
+    }
+
+    function drawCard() {
+      const box = document.getElementById('flashcardBox');
+      if (!practiceCards.length) {
+        box.textContent = 'Geen kaartjies vir hierdie vak nie';
+        return;
+      }
+      const card = practiceCards[currentCardIndex];
+      box.textContent = showingAnswer ? card.answer : card.question;
+    }
+
+    function flipCard() {
+      if (!practiceCards.length) return;
+      showingAnswer = !showingAnswer;
+      drawCard();
+    }
+
+    function nextCard() {
+      if (!practiceCards.length) return;
+      currentCardIndex = (currentCardIndex + 1) % practiceCards.length;
+      showingAnswer = false;
+      drawCard();
+    }
+
+    function prevCard() {
+      if (!practiceCards.length) return;
+      currentCardIndex = (currentCardIndex - 1 + practiceCards.length) % practiceCards.length;
+      showingAnswer = false;
+      drawCard();
+    }
+
+    function saveNote() {
+      const subjectId = Number(document.getElementById('noteSubject').value);
+      const title = document.getElementById('noteTitle').value.trim();
+      const body = document.getElementById('noteBody').value.trim();
+      if (!subjectId || !title || !body) return alert('Voltooi al die note velde');
+      const subject = subjects.find(s => s.id === subjectId);
+      notes.unshift({ id: Date.now(), subjectId, subjectName: subject ? subject.name : '', title, body, created: new Date().toLocaleString() });
+      document.getElementById('noteTitle').value = '';
+      document.getElementById('noteBody').value = '';
+      saveAll();
+      renderNotes();
+      renderStats();
+    }
+
+    function renderNotes() {
+      const list = document.getElementById('noteList');
+      if (!notes.length) {
+        list.innerHTML = '<div class="muted">Nog geen notas nie.</div>';
+        return;
+      }
+      list.innerHTML = notes.map(n => `
+        <div class="list-item">
+          <strong>${n.title}</strong><br>
+          <span class="pill">${n.subjectName}</span>
+          <div style="margin-top:8px">${n.body.replace(/\n/g,'<br>')}</div>
+          <div class="small" style="margin-top:8px">${n.created}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderAll() {
+      renderSubjects();
+      renderStats();
+      renderSessions();
+      renderNotes();
+      loadPracticeCards();
+      resetTimer();
+    }
+
+    renderAll();
+  </script>  <script>
+    // Extra features v2
+    let tasks = JSON.parse(localStorage.getItem('study_tasks') || '[]');
+    let exams = JSON.parse(localStorage.getItem('study_exams') || '[]');
+
+    function saveAllExtra() {
+      localStorage.setItem('study_tasks', JSON.stringify(tasks));
+      localStorage.setItem('study_exams', JSON.stringify(exams));
+    }
+
+    const oldSaveAll = saveAll;
+    saveAll = function() {
+      oldSaveAll();
+      saveAllExtra();
+    }
+
+    // Extend tabs
+    document.querySelector('.tabs').innerHTML = `
+      <button class="tab active" onclick="showPage('home', this)">Home</button>
+      <button class="tab" onclick="showPage('subjects', this)">Vakke</button>
+      <button class="tab" onclick="showPage('planner', this)">Beplan</button>
+      <button class="tab" onclick="showPage('timer', this)">Timer</button>
+      <button class="tab" onclick="showPage('flashcards', this)">Kaartjies</button>
+      <button class="tab" onclick="showPage('notes', this)">Notas</button>
+      <button class="tab" onclick="showPage('progress', this)">Stats</button>
+    `;
+    document.querySelector('.tabs').style.gridTemplateColumns = 'repeat(7, 1fr)';
+
+    // Insert new planner page
+    document.getElementById('timer').insertAdjacentHTML('beforebegin', `
+      <section id="planner" class="page">
+        <div class="card">
+          <h2>Study Planner</h2>
+          <select id="taskSubject"></select>
+          <input id="taskTitle" placeholder="Taak of hoofstuk" />
+          <input id="taskDate" type="date" />
+          <select id="taskStatus">
+            <option value="Moet begin">Moet begin</option>
+            <option value="Besig">Besig</option>
+            <option value="Klaar">Klaar</option>
+          </select>
+          <button onclick="addTask()">+ Voeg taak by</button>
+        </div>
+
+        <div class="card">
+          <h3>Eksamen / toets datum</h3>
+          <select id="examSubject"></select>
+          <input id="examTitle" placeholder="Bv. Toets 1 / Eksamen" />
+          <input id="examDate" type="date" />
+          <button onclick="addExam()">+ Voeg datum by</button>
+        </div>
+
+        <div class="card">
+          <h3>My take</h3>
+          <div id="taskList"></div>
+        </div>
+
+        <div class="card">
+          <h3>Belangrike datums</h3>
+          <div id="examList"></div>
+        </div>
+      </section>
+    `);
+
+    // Insert progress page
+    document.getElementById('notes').insertAdjacentHTML('afterend', `
+      <section id="progress" class="page">
+        <div class="card">
+          <h2>My vordering</h2>
+          <div id="progressStats"></div>
+        </div>
+        <div class="card">
+          <h3>Vak prestasie</h3>
+          <div id="subjectProgressList"></div>
+        </div>
+      </section>
+    `);
+
+    function addTask() {
+      const subjectId = Number(document.getElementById('taskSubject').value);
+      const title = document.getElementById('taskTitle').value.trim();
+      const dueDate = document.getElementById('taskDate').value;
+      const status = document.getElementById('taskStatus').value;
+      if (!subjectId || !title) return alert('Voltooi eers die taak velde');
+      const subject = subjects.find(s => s.id === subjectId);
+      tasks.unshift({ id: Date.now(), subjectId, subjectName: subject ? subject.name : '', title, dueDate, status });
+      document.getElementById('taskTitle').value = '';
+      document.getElementById('taskDate').value = '';
+      saveAll();
+      renderTasks();
+      renderProgress();
+    }
+
+    function toggleTaskStatus(id) {
+      tasks = tasks.map(t => {
+        if (t.id !== id) return t;
+        const next = t.status === 'Moet begin' ? 'Besig' : t.status === 'Besig' ? 'Klaar' : 'Moet begin';
+        return { ...t, status: next };
+      });
+      saveAll();
+      renderTasks();
+      renderProgress();
+    }
+
+    function deleteTask(id) {
+      tasks = tasks.filter(t => t.id !== id);
+      saveAll();
+      renderTasks();
+      renderProgress();
+    }
+
+    function addExam() {
+      const subjectId = Number(document.getElementById('examSubject').value);
+      const title = document.getElementById('examTitle').value.trim();
+      const date = document.getElementById('examDate').value;
+      if (!subjectId || !title || !date) return alert('Voltooi eers die eksamen velde');
+      const subject = subjects.find(s => s.id === subjectId);
+      exams.unshift({ id: Date.now(), subjectId, subjectName: subject ? subject.name : '', title, date });
+      document.getElementById('examTitle').value = '';
+      document.getElementById('examDate').value = '';
+      saveAll();
+      renderExams();
+      renderProgress();
+    }
+
+    function deleteExam(id) {
+      exams = exams.filter(e => e.id !== id);
+      saveAll();
+      renderExams();
+      renderProgress();
+    }
+
+    function renderTasks() {
+      const list = document.getElementById('taskList');
+      if (!list) return;
+      if (!tasks.length) {
+        list.innerHTML = '<div class="muted">Nog geen take nie.</div>';
+        return;
+      }
+      list.innerHTML = tasks.map(t => `
+        <div class="list-item">
+          <strong>${t.title}</strong><br>
+          <span class="pill">${t.subjectName}</span>
+          <span class="pill">${t.status}</span>
+          ${t.dueDate ? `<div class="small">Datum: ${t.dueDate}</div>` : ''}
+          <div style="margin-top:10px" class="row two">
+            <button onclick="toggleTaskStatus(${t.id})">Status wissel</button>
+            <button class="danger" onclick="deleteTask(${t.id})">Delete</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderExams() {
+      const list = document.getElementById('examList');
+      if (!list) return;
+      if (!exams.length) {
+        list.innerHTML = '<div class="muted">Nog geen datums nie.</div>';
+        return;
+      }
+      const sorted = [...exams].sort((a,b) => (a.date || '').localeCompare(b.date || ''));
+      list.innerHTML = sorted.map(e => {
+        const daysLeft = e.date ? Math.ceil((new Date(e.date) - new Date()) / 86400000) : null;
+        return `
+          <div class="list-item">
+            <strong>${e.title}</strong><br>
+            <span class="pill">${e.subjectName}</span>
+            <span class="pill">${e.date}</span>
+            ${daysLeft !== null ? `<div class="small">${daysLeft >= 0 ? daysLeft + ' dae oor' : 'Verby'}</div>` : ''}
+            <div style="margin-top:10px">
+              <button class="danger" onclick="deleteExam(${e.id})">Delete</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderProgress() {
+      const totalMinutes = sessions.reduce((sum, s) => sum + s.minutes, 0);
+      const doneTasks = tasks.filter(t => t.status === 'Klaar').length;
+      const totalTasks = tasks.length;
+      const upcomingExams = exams.filter(e => e.date && new Date(e.date) >= new Date()).length;
+      const progressStats = document.getElementById('progressStats');
+      if (progressStats) {
+        progressStats.innerHTML = `
+          <span class="pill">Totale minute: ${totalMinutes}</span>
+          <span class="pill">Take klaar: ${doneTasks}/${totalTasks}</span>
+          <span class="pill">Vakke: ${subjects.length}</span>
+          <span class="pill">Komende toetse: ${upcomingExams}</span>
+        `;
+      }
+
+      const list = document.getElementById('subjectProgressList');
+      if (!list) return;
+      if (!subjects.length) {
+        list.innerHTML = '<div class="muted">Voeg eers vakke by.</div>';
+        return;
+      }
+      list.innerHTML = subjects.map(s => {
+        const mins = sessions.filter(x => x.subjectId === s.id).reduce((sum, x) => sum + x.minutes, 0);
+        const cards = flashcards.filter(x => x.subjectId === s.id).length;
+        const myNotes = notes.filter(x => x.subjectId === s.id).length;
+        const myTasks = tasks.filter(x => x.subjectId === s.id).length;
+        const myDone = tasks.filter(x => x.subjectId === s.id && x.status === 'Klaar').length;
+        return `
+          <div class="list-item">
+            <strong>${s.name}</strong><br>
+            <span class="pill">${mins} min</span>
+            <span class="pill">${cards} kaartjies</span>
+            <span class="pill">${myNotes} notas</span>
+            <span class="pill">${myDone}/${myTasks} take klaar</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Extend subject renders with new dropdowns
+    const oldRenderSubjects = renderSubjects;
+    renderSubjects = function() {
+      oldRenderSubjects();
+      const options = subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+      ['taskSubject','examSubject'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = options || '<option value="">Geen vakke</option>';
+      });
+    }
+
+    const oldRenderAll = renderAll;
+    renderAll = function() {
+      oldRenderAll();
+      renderTasks();
+      renderExams();
+      renderProgress();
+    }
+
+    renderAll();
+  </script></body>
+</html>
